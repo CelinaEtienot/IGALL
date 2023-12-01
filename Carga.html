@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>Cargar Documentos</title>
+    <link rel="stylesheet" href="style.css">
+</head>
+<body>
+    <h1>Cargar Documentos</h1>
+    <form id="form" enctype="multipart/form-data" method="POST">
+        <label for="No">No:</label>
+        <input type="text" id="No" name="No" required><br><br>
+        <label for="Title">Title:</label>
+        <input type="text" id="Title" name="Title" required><br><br>
+        <label for="Area">Area:</label>
+        <input type="text" id="Area" name="Area" required><br><br>
+        <label for="Archivo">Archivo:</label>
+        <input type="file" id="Archivo" name="Archivo" required><br><br>
+        <label for="Last_valid_version">Last valid version:</label>
+        <input type="text" id="Last_valid_version" name="Last_valid_version" required><br><br>
+        <label for="Igall_owner">Igall owner:</label>
+        <input type="text" id="Igall_owner" name="Igall_owner" required><br><br>
+        <input type="submit" value="Cargar">
+    </form>
+    <script src="carga.js"></script>
+</body>
+</html>
