@@ -69,15 +69,19 @@ class Biblioteca:
             return True
     
     def consultar_documento(self, No):
-        self.cursor.execute("SELECT * FROM Biblioteca WHERE No =  %s", (No))
+        self.cursor.execute("SELECT * FROM Biblioteca WHERE No =  %s", (No,))
         documento = self.cursor.fetchone()
         return documento
     
     def modificar_documento(self, No, Title, Area, url, Last_valid_version, Igall_owner):
-        sql = f"UPDATE Biblioteca SET Title = '{Title}', Area = '{Area}', url = '{url}', Last_valid_version = {Last_valid_version}, Igall_owner = '{Igall_owner}' WHERE No = {No}"
-        self.cursor.execute(sql)
+        sql = "UPDATE Biblioteca SET Title = %s, Area = %s, url = %s, Last_valid_version = %s, Igall_owner = %s WHERE No = %s"
+        values = (Title, Area, url, Last_valid_version, Igall_owner, No)
+
+        self.cursor.execute(sql, values)
         self.conn.commit()
+        
         return self.cursor.rowcount > 0
+
     
     def mostrar_documentos(self, No):
         self.cursor.execute("SELECT * FROM Biblioteca WHERE No = %s", (No,))
@@ -113,7 +117,7 @@ def listar_documentos():
     documentos = BIBLIOTECA.listar_documentos()
     return jsonify(documentos)
 
-@app.route("/documentos/<int:No>", methods=["GET"])
+@app.route("/documentos/<No>", methods=["GET"])
 def mostrar_documento(No):
     BIBLIOTECA.mostrar_documentos(No)
     documento = BIBLIOTECA.consultar_documento(No)
@@ -143,7 +147,7 @@ def agregar_documento():
     else:
         return jsonify({"mensaje": "Documento existente"}), 400
 
-@app.route("/documentos/<int:No>", methods=["PUT"])
+@app.route("/documentos/<No>", methods=["PUT"])
 def modificar_documento(No):
     # Recojo los datos del form
     No = request.form['No']
@@ -163,7 +167,7 @@ def modificar_documento(No):
     else:
         return jsonify({"mensaje": "Documento no encontrado"}), 404
 
-@app.route("/documentos/<int:No>", methods=["DELETE"])
+@app.route("/documentos/<No>", methods=["DELETE"])
 def eliminar_documento(No):
     documento = BIBLIOTECA.consultar_documento(No)
     if documento:

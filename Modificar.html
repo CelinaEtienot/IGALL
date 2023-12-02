@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Modificar documentos</title>
+    <link rel="stylesheet" href="styles.css">
+</head>
+
+<body>
+    <div id="app">
+        <h1>Modificar Documentos</h1>
+        <h3>IGALL - IAEA</h3>
+        <form @submit.prevent="obtenerDocumento">
+            <label for="No">No:</label>
+            <input type="text" v-model="No" required><br>
+            <button type="submit">Modificar Producto</button>
+            <a href="index.html">Menu principal</a>
+        </form>
+        <div v-if="MostrarDocumentos">
+            <h2>Datos del Documento</h2>
+            <form @submit.prevent="guardarCambios">
+                <label for="TitleModificar">Title:</label>
+                <input type="text" id="titleModificar" v-model="Title" required><br>
+                <label for="AreaModificar">Area:</label>
+                <input type="text" id="areaModificar" v-model="area" required><br>
+                <label for="Last_valid_versionModificar">Last valid version:</label>
+                <input type="text" id="Last_valid_versionModificar" v-model="Last_valid_version" required><br>
+                <label for="Igall_ownerModificar">IGALL owner:</label>
+                <input type="text" id="Igall_ownerModificar" v-model="Igall_owner" required><br>
+                <!-- Input para nuevo documento -->
+                <label for="nuevoDocumento">Nuevo Documento:</label>
+                <input type="file" id="nuevoDocumento" @change="seleccionarDocumento"><br>
+
+                <button type="submit">Guardar Cambios</button>
+                <a href="modificaciones.html">Cancelar</a>
+            </form>
+        </div>
+    </div>
+    <script src="https://unpkg.com/vue@next"></script>
+    <script src="modificar.js"></script>
+</body>
+
+</html>
