@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Prueba de API</title>
+</head>
+<body>
+    <h1>Prueba de API</h1>
+    <form id="formulario">
+        <label for="table_no">Table No:</label>
+        <input type="text" id="table_no" name="table_no">
+
+        <label for="igall_no">IGALL No:</label>
+        <input type="text" id="igall_no" name="igall_no">
+
+        <label for="system">System:</label>
+        <input type="text" id="system" name="system">
+
+        <label for="structure_component">Structure Component:</label>
+        <input type="text" id="structure_component" name="structure_component">
+
+        <label for="critical_location_part">Critical Location Part:</label>
+        <input type="text" id="critical_location_part" name="critical_location_part">
+
+        <label for="material">Material:</label>
+        <input type="text" id="material" name="material">
+
+        <label for="environment">Environment:</label>
+        <input type="text" id="environment" name="environment">
+
+        <label for="ageing_effect">Ageing Effect:</label>
+        <input type="text" id="ageing_effect" name="ageing_effect">
+
+        <label for="design">Design:</label>
+        <input type="text" id="design" name="design">
+
+        <button type="button" onclick="obtenerLineas()">Consultar</button>
+    </form>
+    <div id="resultado"></div>
+
+    <script src="Consulta_AMRtable.js"></script>
+</body>
+</html>

@@ -101,9 +101,142 @@ class Biblioteca:
         self.cursor.execute(sql)
         self.conn.commit()
         return self.cursor.rowcount > 0
-
 #-------------------------------------------------
-#    PROGRAMA PRINCIPAL
+#    definicion clase AMR
+#-------------------------------------------------
+class AMR:
+    def __init__(self, host, user, password, database):
+        self.conn = mysql.connector.connect(
+            host=host,
+            user=user,
+            password=password,
+        )
+        self.cursor = self.conn.cursor()
+        self.cursor = self.conn.cursor(dictionary=True)
+        
+        # Intentamos seleccionar la base de datos
+        try:
+            self.cursor.execute(f"USE {database}")
+        except mysql.connector.Error as err:
+            # Si la base de datos no existe, la creamos
+            if err.errno == mysql.connector.errorcode.ER_BAD_DB_ERROR:
+                self.cursor.execute(f"CREATE DATABASE {database}")
+                self.conn.database = database
+            else:
+                raise err
+        # Una vez que la base de datos está establecida, creamos la tabla si no existe
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS AMRtable (
+                                id VARCHAR(255) PRIMARY KEY,
+                                table_no INT,
+                                igall_no INT,
+                                system VARCHAR(255),
+                                structure_component VARCHAR(255),
+                                critical_location_part VARCHAR(255),
+                                material VARCHAR(255),
+                                environment VARCHAR(255),
+                                ageing_effect VARCHAR(255),
+                                degradation_mechanism VARCHAR(255),
+                                Document VARCHAR(255),
+                                design VARCHAR(255),
+                                CONSTRAINT unique_id UNIQUE (id)
+                                );
+                                -- Para asegurarte de que los valores sean únicos
+                                CREATE TRIGGER unique_id_trigger
+                                BEFORE INSERT ON TuTabla
+                                FOR EACH ROW
+                                SET NEW.id = CONCAT(NEW.table_no, '_', NEW.igall_no);''', multi=True
+                            )
+        self.conn.commit()
+        # Cerrar el cursor inicial y abrir uno nuevo con el parámetro dictionary=True
+        self.cursor.close()
+        self.cursor = self.conn.cursor(dictionary=True)
+        
+    def agregar_linea(self, table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design):
+        # Verificar si la línea ya existe en la tabla
+        self.cursor.execute("SELECT * FROM AMRtable WHERE table_no = %s AND igall_no = %s", (table_no, igall_no))
+        linea_existe = self.cursor.fetchone()
+
+        if linea_existe:
+            return False  # La línea ya existe, no se puede agregar de nuevo
+        else:
+            # Insertar la nueva línea en la tabla
+            sql = "INSERT INTO AMRTabla (id, table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            values = ("%s_%s" % (table_no, igall_no), table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design)
+            self.cursor.execute(sql, values)
+            self.conn.commit()
+            return True  # La línea se agregó correctamente
+
+
+    def eliminar_lineas(self, table_no, igall_no):
+        # Verificar si la línea existe en la tabla
+        self.cursor.execute("SELECT * FROM AMRtable WHERE table_no = %s AND igall_no = %s", (table_no, igall_no))
+        linea_existe = self.cursor.fetchone()
+
+        if linea_existe:
+             # Construir la consulta SQL para eliminar las líneas por table_no e igall_no
+            sql = "DELETE FROM TuTabla WHERE table_no = %s AND igall_no = %s"
+            
+            # Ejecutar la consulta
+            self.cursor.execute(sql, (table_no, igall_no))
+            self.conn.commit()
+
+            # Verificar si se eliminaron filas
+            return self.cursor.rowcount > 0
+        else:
+           return False  # La línea no existe, no se puede eliminar
+
+    def mostrar_lineas(self, table_no=None, igall_no=None, system=None, structure_component=None, critical_location_part=None, material=None, environment=None, ageing_effect=None, degradation_mechanism=None, document=None, design=None):
+        # Construir la consulta SQL dinámicamente
+        sql = "SELECT * FROM TuTabla WHERE "
+        conditions = []
+        values = []
+
+        if table_no is not None:
+            conditions.append("table_no = %s")
+            values.append(table_no)
+        if igall_no is not None:
+            conditions.append("igall_no = %s")
+            values.append(igall_no)
+        if system is not None:
+            conditions.append("system = %s")
+            values.append(system)
+        if structure_component is not None:
+            conditions.append("structure_component = %s")
+            values.append(structure_component)
+        if critical_location_part is not None:
+            conditions.append("critical_location_part = %s")
+            values.append(critical_location_part)
+        if material is not None:
+            conditions.append("material = %s")
+            values.append(material)
+        if environment is not None:
+            conditions.append("environment = %s")
+            values.append(environment)
+        if ageing_effect is not None:
+            conditions.append("ageing_effect = %s")
+            values.append(ageing_effect)
+        if degradation_mechanism is not None:
+            conditions.append("degradation_mechanism = %s")
+            values.append(degradation_mechanism)
+        if document is not None:
+            conditions.append("document = %s")
+            values.append(document)
+        if design is not None:
+            conditions.append("design = %s")
+            values.append(design)
+
+        if conditions:
+            sql += " AND ".join(conditions)
+
+        # Ejecutar la consulta
+        self.cursor.execute(sql, values)
+        lineas = self.cursor.fetchall()
+
+        return lineas
+
+   
+#-------------------------------------------------
+#    MODULO BIBLIOTECA
 #-------------------------------------------------
     
 BIBLIOTECA = Biblioteca(host='localhost', user='root', password='', database='mechanical')
@@ -124,7 +257,7 @@ def mostrar_documento(No):
     if documento:
         return jsonify(documento)
     else:
-        return "Producto no encontrado", 404
+        return "Documento no encontrado", 404
     
 @app.route("/documentos", methods=["POST"])
 def agregar_documento():
@@ -185,6 +318,37 @@ def eliminar_documento(No):
     
 if __name__ == "__main__":
     app.run(debug=True)
+
+#-------------------------------------------------
+#    MODULO AMRtable
+#-------------------------------------------------
+
+AMRTABLE = AMR(host='localhost', user='root', password='', database='mechanical')
+
+@app.route("/lineas", methods=["GET"])
+def mostrar_lineas():
+    # Obtener parámetros de búsqueda desde la solicitud
+    table_no = request.args.get('table_no')
+    igall_no = request.args.get('igall_no')
+    system = request.args.get('system')
+    structure_component = request.args.get('structure_component')
+    critical_location_part = request.args.get('critical_location_part')
+    material = request.args.get('material')
+    environment = request.args.get('environment')
+    ageing_effect = request.args.get('ageing_effect')
+    degradation_mechanism = request.args.get('degradation_mechanism')
+    document = request.args.get('document')
+    design = request.args.get('design')
+
+    lineas = AMRTABLE.mostrar_lineas(
+        table_no, igall_no, system, structure_component, critical_location_part,
+        material, environment, ageing_effect, degradation_mechanism, document, design
+    )
+
+    if lineas:
+        return jsonify(lineas)
+    else:
+        return "No se encontraron registros con esos parámetros", 404
 
 
 #Database host address:Celinaetienot.mysql.pythonanywhere-services.com
