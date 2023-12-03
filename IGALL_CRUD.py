@@ -112,7 +112,7 @@ class Biblioteca:
 #    PROGRAMA PRINCIPAL
 #-------------------------------------------------
     
-BIBLIOTECA = Biblioteca(host='localhost', user='root', password='indios88', database='mechanical')
+BIBLIOTECA = Biblioteca(host='localhost', user='root', password='', database='mechanical')
 
 
 # Carpeta para almacenar los documentos
