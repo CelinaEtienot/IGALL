@@ -13,7 +13,7 @@ import os
 import time
 
 app = Flask(__name__)
-CORS(app, resources={r"/documentos/*": {"origins": "http://127.0.0.1:5500"}}, methods=["GET", "POST", "PUT", "DELETE"])
+CORS(app, resources={r"/documentos/*": {"origins": "http://127.0.0.1:5500"}}, methods=["GET", "POST", "PUT", "DELETE"])  ##A TENER EN CUENTA AL CAMBIAR DE SERVIDOR
 
 #-------------------------------------------------
 #    definicion clase biblioteca
