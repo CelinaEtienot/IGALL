@@ -4,6 +4,7 @@ from flask import request
 
 from flask_cors import CORS
 
+
 import mysql.connector
 
 from werkzeug.utils import secure_filename
@@ -12,7 +13,7 @@ import os
 import time
 
 app = Flask(__name__)
-CORS(app)
+CORS(app, resources={r"/documentos/*": {"origins": "http://127.0.0.1:5500"}}, methods=["GET", "POST", "PUT", "DELETE"])
 
 #-------------------------------------------------
 #    definicion clase biblioteca
@@ -96,21 +97,26 @@ class Biblioteca:
             print(f"Propietario..............: {documento['Igall_owner']}")
             print("-" * 50)
 
+    
+    
     def eliminar_documento(self, No):
-        sql = "DELETE FROM Biblioteca WHERE No =  %s", (No,)
-        self.cursor.execute(sql)
+        sql = "DELETE FROM Biblioteca WHERE No = %s"
+        self.cursor.execute(sql, (No,))
         self.conn.commit()
+        # Consumir resultados para evitar el "Unread result found"
+        self.cursor.fetchall()
         return self.cursor.rowcount > 0
+
 
 #-------------------------------------------------
 #    PROGRAMA PRINCIPAL
 #-------------------------------------------------
     
-BIBLIOTECA = Biblioteca(host='localhost', user='root', password='', database='mechanical')
+BIBLIOTECA = Biblioteca(host='localhost', user='root', password='indios88', database='mechanical')
 
 
 # Carpeta para almacenar los documentos
-ruta_destino= 'static/documentos/'
+ruta_destino= 'static\documentos'
 
 @app.route("/documentos", methods=["GET"])
 def listar_documentos():
@@ -171,17 +177,27 @@ def modificar_documento(No):
 def eliminar_documento(No):
     documento = BIBLIOTECA.consultar_documento(No)
     if documento:
-        # Eliminar el documento si existe
-        url = os.path.join(ruta_destino, documento['url'])
-        if os.path.exists(url):
-            os.remove(url)
-        # Luego, elimina el documento de la biblioteca
-        if BIBLIOTECA.eliminar_documento(No):
-            return jsonify({"mensaje": "Documento eliminado"}), 200
-        else:
-            return jsonify({"mensaje": "Error al eliminar el documento"}), 500
+        try:
+            # Eliminar el documento si existe
+            url = os.path.join(ruta_destino, documento['url'])
+            if os.path.exists(url):
+                os.remove(url)
+
+            # Luego, elimina el documento de la biblioteca
+            if BIBLIOTECA.eliminar_documento(No):
+                print("Documento eliminado correctamente")
+                return jsonify({"mensaje": "Documento eliminado correctamente"}), 200
+            else:
+                print("Error interno al eliminar el documento de la biblioteca")
+                return jsonify({"error": True, "message": "Error interno al eliminar el documento"}), 500
+        except Exception as e:
+            print("Error al eliminar el documento:", str(e))
+            return jsonify({"error": True, "message": str(e)}), 500
     else:
-        return jsonify({"mensaje": "Documento no encontrado"}), 404
+        return jsonify({"error": True, "message": "Documento no encontrado"}), 404
+
+
+
     
 if __name__ == "__main__":
     app.run(debug=True)
