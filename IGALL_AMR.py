@@ -13,7 +13,10 @@ import os
 import time
 
 app = Flask(__name__)
-CORS(app, resources={r"/documentos/*": {"origins": "http://127.0.0.1:5500"}}, methods=["GET", "POST", "PUT", "DELETE"])  ##A TENER EN CUENTA AL CAMBIAR DE SERVIDOR
+CORS(app, resources={
+    r"/documentos/*": {"origins": "http://127.0.0.1:5500"},
+    r"/lineas/*": {"origins": "http://127.0.0.1:5500"}
+}, methods=["GET", "POST", "PUT", "DELETE"])
 
 #-------------------------------------------------
 #    definicion clase biblioteca
@@ -165,7 +168,7 @@ class AMR:
             return False  # La línea ya existe, no se puede agregar de nuevo
         else:
             # Insertar la nueva línea en la tabla
-            sql = "INSERT INTO AMRTabla (id, table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            sql = "INSERT INTO AMRtable (id, table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             values = ("%s_%s" % (table_no, igall_no), table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design)
             self.cursor.execute(sql, values)
             self.conn.commit()
@@ -179,7 +182,7 @@ class AMR:
 
         if linea_existe:
              # Construir la consulta SQL para eliminar las líneas por table_no e igall_no
-            sql = "DELETE FROM TuTabla WHERE table_no = %s AND igall_no = %s"
+            sql = "DELETE FROM AMRtable WHERE table_no = %s AND igall_no = %s"
             
             # Ejecutar la consulta
             self.cursor.execute(sql, (table_no, igall_no))
@@ -192,51 +195,51 @@ class AMR:
 
     def mostrar_lineas(self, table_no=None, igall_no=None, system=None, structure_component=None, critical_location_part=None, material=None, environment=None, ageing_effect=None, degradation_mechanism=None, document=None, design=None):
         # Construir la consulta SQL dinámicamente
-        sql = "SELECT * FROM TuTabla WHERE "
+        sql = "SELECT * FROM AMRtable WHERE 1=1"  # Start with 1=1 to simplify the query building
         conditions = []
         values = []
 
         if table_no is not None:
-            conditions.append("table_no = %s")
+            conditions.append(" AND table_no = %s")
             values.append(table_no)
         if igall_no is not None:
-            conditions.append("igall_no = %s")
+            conditions.append(" AND igall_no = %s")
             values.append(igall_no)
         if system is not None:
-            conditions.append("system = %s")
+            conditions.append(" AND system = %s")
             values.append(system)
         if structure_component is not None:
-            conditions.append("structure_component = %s")
+            conditions.append(" AND structure_component = %s")
             values.append(structure_component)
         if critical_location_part is not None:
-            conditions.append("critical_location_part = %s")
+            conditions.append(" AND critical_location_part = %s")
             values.append(critical_location_part)
         if material is not None:
-            conditions.append("material = %s")
+            conditions.append(" AND material = %s")
             values.append(material)
         if environment is not None:
-            conditions.append("environment = %s")
+            conditions.append(" AND environment = %s")
             values.append(environment)
         if ageing_effect is not None:
-            conditions.append("ageing_effect = %s")
+            conditions.append(" AND ageing_effect = %s")
             values.append(ageing_effect)
         if degradation_mechanism is not None:
-            conditions.append("degradation_mechanism = %s")
+            conditions.append(" AND degradation_mechanism = %s")
             values.append(degradation_mechanism)
         if document is not None:
-            conditions.append("document = %s")
+            conditions.append(" AND document = %s")
             values.append(document)
         if design is not None:
-            conditions.append("design = %s")
+            conditions.append(" AND `design` = %s")
             values.append(design)
 
         if conditions:
-            sql += " AND ".join(conditions)
+            sql += " ".join(conditions)
 
         # Ejecutar la consulta
         self.cursor.execute(sql, values)
         lineas = self.cursor.fetchall()
-
+        print (sql)
         return lineas
 
    
@@ -330,9 +333,6 @@ def eliminar_documento(No):
         return jsonify({"error": True, "message": "Documento no encontrado"}), 404
 
     
-if __name__ == "__main__":
-    app.run(debug=True)
-
 #-------------------------------------------------
 #    MODULO AMRtable
 #-------------------------------------------------
@@ -370,3 +370,6 @@ def mostrar_lineas():
 #password: JaPaCe2023
 #Database:Celinaetienot$IGALL
 #ruta_documentos:'/home/Celinaetienot/mysite/static/documents/'
+
+if __name__ == "__main__":
+    app.run(debug=True)

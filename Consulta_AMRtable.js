@@ -2,8 +2,14 @@ function obtenerLineas() {
     const formulario = document.getElementById('formulario');
     const formData = new FormData(formulario);
 
-    const queryString = new URLSearchParams(formData).toString();
-    const url = `http://127.0.0.1:5000/lineas/?${queryString}`;
+    // Filtrar las entradas eliminando aquellas con valores vacíos
+    const entriesWithoutEmptyValues = Array.from(formData.entries())
+        .filter(([key, value]) => value !== "")
+        .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
+
+    const queryString = new URLSearchParams(entriesWithoutEmptyValues).toString();
+    const url = `http://127.0.0.1:5000/lineas?${queryString}`;
+
 
     fetch(url)
         .then(response => {
@@ -14,15 +20,46 @@ function obtenerLineas() {
             }
         })
         .then(data => {
-            mostrarResultado(data);
+            mostrarResultadoEnTabla(data);
         })
         .catch(error => {
             console.error('Error:', error);
-            mostrarResultado('Error al obtener los datos.');
+            mostrarResultadoEnTabla([]);
         });
 }
 
-function mostrarResultado(data) {
-    const resultadoDiv = document.getElementById('resultado');
-    resultadoDiv.innerHTML = JSON.stringify(data, null, 2);
+function mostrarResultadoEnTabla(data) {
+    const tabla = document.querySelector('#tabla-resultados tbody');
+
+    // Limpiar contenido anterior de la tabla
+    tabla.innerHTML = '';
+
+    // Ordenar las claves de los datos según tu preferencia
+    const columnOrder = [
+        'table_no',
+        'igall_no',
+        'design', 
+        'system',
+        'structure_component',
+        'critical_location_part',
+        'material',
+        'environment',
+        'ageing_effect',
+        'degradation_mechanism',
+        'Document'
+    ];
+
+    // Iterar sobre los datos y agregar filas a la tabla
+    data.forEach(item => {
+        const fila = document.createElement('tr');
+
+        // Agregar celdas en el orden especificado
+        columnOrder.forEach(column => {
+            const celda = document.createElement('td');
+            celda.textContent = item[column] || '';  // Manejo de valores nulos o indefinidos
+            fila.appendChild(celda);
+        });
+
+        tabla.appendChild(fila);
+    });
 }
