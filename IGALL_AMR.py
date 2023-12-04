@@ -195,7 +195,7 @@ class AMR:
 
     def mostrar_lineas(self, table_no=None, igall_no=None, system=None, structure_component=None, critical_location_part=None, material=None, environment=None, ageing_effect=None, degradation_mechanism=None, document=None, design=None):
         # Construir la consulta SQL dinámicamente
-        sql = "SELECT * FROM AMRtable WHERE 1=1"  # Start with 1=1 to simplify the query building
+        sql = "SELECT AMRtable.*, Biblioteca.url FROM AMRtable LEFT JOIN Biblioteca ON AMRtable.document = Biblioteca.No WHERE 1=1"  # Start with 1=1 to simplify the query building
         conditions = []
         values = []
 

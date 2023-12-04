@@ -10,7 +10,6 @@ function obtenerLineas() {
     const queryString = new URLSearchParams(entriesWithoutEmptyValues).toString();
     const url = `http://127.0.0.1:5000/lineas?${queryString}`;
 
-
     fetch(url)
         .then(response => {
             if (response.ok) {
@@ -34,32 +33,25 @@ function mostrarResultadoEnTabla(data) {
     // Limpiar contenido anterior de la tabla
     tabla.innerHTML = '';
 
-    // Ordenar las claves de los datos según tu preferencia
-    const columnOrder = [
-        'table_no',
-        'igall_no',
-        'design', 
-        'system',
-        'structure_component',
-        'critical_location_part',
-        'material',
-        'environment',
-        'ageing_effect',
-        'degradation_mechanism',
-        'Document'
-    ];
-
     // Iterar sobre los datos y agregar filas a la tabla
-    data.forEach(item => {
-        const fila = document.createElement('tr');
+    for (let lineas of data) {
+        // Crear una fila de tabla
+        let fila = document.createElement('tr');
 
-        // Agregar celdas en el orden especificado
-        columnOrder.forEach(column => {
-            const celda = document.createElement('td');
-            celda.textContent = item[column] || '';  // Manejo de valores nulos o indefinidos
-            fila.appendChild(celda);
-        });
+        // Agregar columnas a la fila
+        fila.innerHTML = `<td>${lineas.table_no}</td>
+                         <td>${lineas.igall_no}</td>
+                         <td>${lineas.design}</td>
+                         <td>${lineas.system}</td>
+                         <td>${lineas.structure_component}</td>
+                         <td>${lineas.critical_location_part}</td>
+                         <td>${lineas.material}</td>
+                         <td>${lineas.environment}</td>
+                         <td>${lineas.ageing_effect}</td>
+                         <td>${lineas.degradation_mechanism}</td>
+                         <td><a href="static/documentos/${lineas.url}" download>${lineas.Document}</a></td>`;
 
+        // Anexar la fila al cuerpo de la tabla
         tabla.appendChild(fila);
-    });
+    }
 }
