@@ -21,7 +21,7 @@ ul {
 }
 
 body{
-    background-color: #306adf;
+    background-color:#36c;
 }
 
 .principal__container{
@@ -59,7 +59,7 @@ ul li a{
 }
 
 ul li a:hover{
-    background-color: rgb(39, 78, 156);
+    background-color: #36c;
 }
 
 ul li img{
