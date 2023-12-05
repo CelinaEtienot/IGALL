@@ -15,9 +15,10 @@
         <form @submit.prevent="obtenerDocumento">
             <label for="No">No:</label>
             <input type="text" v-model="No" required><br>
-            <button type="submit">Modificar Producto</button>
-            <a href="index.html">Menu principal</a>
+            <button type="submit">Modify Product</button>
+            <button><a href="index.html">Menu principal</a></button>
         </form>
+        
         <div v-if="MostrarDocumentos">
             <h2>Datos del Documento</h2>
             <form @submit.prevent="guardarCambios">
