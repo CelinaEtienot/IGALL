@@ -1,17 +1,24 @@
 <!DOCTYPE html>
 <html lang="es">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Eliminar Documento</title>
     <link rel="stylesheet" href="styles.css">
 </head>
+
 <body>
-    <h1>Eliminar Documento</h1>
-    <label for="documentNo">Número de Documento:</label>
-    <input type="text" id="documentNo" name="documentNo" required>
-    <button onclick="eliminarDocumento()">Eliminar Documento</button>
-    <div id="result"></div>
+    <div class="principal__container">
+        
+        <h1>Eliminar Documento</h1>
+        <label for="documentNo">Número de Documento:</label>
+        <input type="text" id="documentNo" name="documentNo" required>
+        <button onclick="eliminarDocumento()">Eliminar Documento</button>
+        <button><a href="index.html">Menu principal</a></button>
+        <div id="result"></div>
+    </div>
     <script src="eliminar.js"></script>
 </body>
+
 </html>
