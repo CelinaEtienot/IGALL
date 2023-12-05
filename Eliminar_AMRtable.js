@@ -5,7 +5,7 @@ function eliminarLineas() {
     const tableNo = formData.get('table_no');
     const igallNo = formData.get('igall_no');
 
-    const url = `http://127.0.0.1:5000/eliminar_lineas/${tableNo}/${igallNo}`;
+    const url = `https://celinaetienot.pythonanywhere.com/eliminar_lineas/${tableNo}/${igallNo}`;
 
     fetch(url, {
         method: 'DELETE'

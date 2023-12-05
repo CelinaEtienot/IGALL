@@ -8,7 +8,7 @@ function obtenerLineas() {
         .reduce((acc, [key, value]) => ({ ...acc, [key]: value }), {});
 
     const queryString = new URLSearchParams(entriesWithoutEmptyValues).toString();
-    const url = `http://127.0.0.1:5000/lineas?${queryString}`;
+    const url = `https://celinaetienot.pythonanywhere.com/lineas?${queryString}`;
 
     fetch(url)
         .then(response => {

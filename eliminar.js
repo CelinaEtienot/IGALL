@@ -1,4 +1,4 @@
-const URL = "http://127.0.0.1:5000/documentos/";
+const URL = "https://celinaetienot.pythonanywhere.com/documentos/";
 
 function eliminarDocumento() {
     const documentNo = document.getElementById("documentNo").value;

@@ -1,4 +1,4 @@
-const URL = "http://127.0.0.1:5000/";
+const URL = "https://celinaetienot.pythonanywhere.com/";
 
 // Realizamos la solicitud GET al servidor para obtener todos los documentos
 fetch(URL + 'documentos')
