@@ -13,7 +13,7 @@ import os
 import time
 
 app = Flask(__name__)
-CORS(app, resources={r"/documentos/*": {"origins": "http://127.0.0.1:5500"}}, methods=["GET", "POST", "PUT", "DELETE"])  ##A TENER EN CUENTA AL CAMBIAR DE SERVIDOR
+CORS(app, resources={r"/documentos/*": {"origins": "https://celinaetienot.pythonanywhere.com"}}, methods=["GET", "POST", "PUT", "DELETE"])
 
 #-------------------------------------------------
 #    definicion clase biblioteca
@@ -27,7 +27,7 @@ class Biblioteca:
         )
         self.cursor = self.conn.cursor()
         self.cursor = self.conn.cursor(dictionary=True)
-        
+
         # Intentamos seleccionar la base de datos
         try:
             self.cursor.execute(f"USE {database}")
@@ -39,7 +39,7 @@ class Biblioteca:
             else:
                 raise err
         # Una vez que la base de datos está establecida, creamos la tabla si no existe
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS `Biblioteca` (
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS `biblioteca` (
                             `No` varchar(255) NOT NULL,
                             `Title` text DEFAULT NULL,
                             `Area` text DEFAULT NULL,
@@ -53,39 +53,39 @@ class Biblioteca:
         self.cursor = self.conn.cursor(dictionary=True)
 
     def listar_documentos(self):
-        self.cursor.execute("SELECT * FROM Biblioteca")
+        self.cursor.execute("SELECT * FROM biblioteca")
         documentos = self.cursor.fetchall()
         return documentos
 
     def agregar_documento(self, No, Title, Area, url, Last_valid_version, Igall_owner):
-        self.cursor.execute("SELECT * FROM Biblioteca WHERE No = %s", (No,))
+        self.cursor.execute("SELECT * FROM biblioteca WHERE No = %s", (No,))
         documento_existe = self.cursor.fetchone()
         if documento_existe:
             return False
         else:
-            sql = "INSERT INTO Biblioteca (No, Title, Area, url, `Last_valid_version`, Igall_owner) VALUES (%s, %s, %s, %s, %s, %s)" 
+            sql = "INSERT INTO biblioteca (No, Title, Area, url, `Last_valid_version`, Igall_owner) VALUES (%s, %s, %s, %s, %s, %s)"
             values = (No, Title, Area, url, Last_valid_version, Igall_owner)
             self.cursor.execute(sql,values)
             self.conn.commit()
             return True
-    
+
     def consultar_documento(self, No):
-        self.cursor.execute("SELECT * FROM Biblioteca WHERE No =  %s", (No,))
+        self.cursor.execute("SELECT * FROM biblioteca WHERE No =  %s", (No,))
         documento = self.cursor.fetchone()
         return documento
-    
+
     def modificar_documento(self, No, Title, Area, url, Last_valid_version, Igall_owner):
-        sql = "UPDATE Biblioteca SET Title = %s, Area = %s, url = %s, Last_valid_version = %s, Igall_owner = %s WHERE No = %s"
+        sql = "UPDATE biblioteca SET Title = %s, Area = %s, url = %s, Last_valid_version = %s, Igall_owner = %s WHERE No = %s"
         values = (Title, Area, url, Last_valid_version, Igall_owner, No)
 
         self.cursor.execute(sql, values)
         self.conn.commit()
-        
+
         return self.cursor.rowcount > 0
 
-    
+
     def mostrar_documentos(self, No):
-        self.cursor.execute("SELECT * FROM Biblioteca WHERE No = %s", (No,))
+        self.cursor.execute("SELECT * FROM biblioteca WHERE No = %s", (No,))
         documentos = self.cursor.fetchall()
         print("-" * 50)
         for documento in documentos:
@@ -97,10 +97,10 @@ class Biblioteca:
             print(f"Propietario..............: {documento['Igall_owner']}")
             print("-" * 50)
 
-    
-    
+
+
     def eliminar_documento(self, No):
-        sql = "DELETE FROM Biblioteca WHERE No = %s"
+        sql = "DELETE FROM biblioteca WHERE No = %s"
         self.cursor.execute(sql, (No,))
         self.conn.commit()
         # Consumir resultados para evitar el "Unread result found"
@@ -111,12 +111,12 @@ class Biblioteca:
 #-------------------------------------------------
 #    PROGRAMA PRINCIPAL
 #-------------------------------------------------
-    
-BIBLIOTECA = Biblioteca(host='localhost', user='root', password='', database='mechanical')
+
+BIBLIOTECA = Biblioteca(host='Celinaetienot.mysql.pythonanywhere-services.com', user='Celinaetienot', password='JaPaCe2023', database='Celinaetienot$IGALL')
 
 
 # Carpeta para almacenar los documentos
-ruta_destino= 'static\documentos'
+ruta_destino= '/home/Celinaetienot/mysite/static/documents/'
 
 @app.route("/documentos", methods=["GET"])
 def listar_documentos():
@@ -131,7 +131,7 @@ def mostrar_documento(No):
         return jsonify(documento)
     else:
         return "Producto no encontrado", 404
-    
+
 @app.route("/documentos", methods=["POST"])
 def agregar_documento():
     # Recojo los datos del form
@@ -141,7 +141,7 @@ def agregar_documento():
     archivo = request.files['Archivo']
     Last_valid_version = request.form['Last_valid_version']
     Igall_owner = request.form['Igall_owner']
-    
+
     nombre_url = secure_filename(archivo.filename)
 
     nombre_base, extension = os.path.splitext(nombre_url)
@@ -198,9 +198,11 @@ def eliminar_documento(No):
 
 
 
-    
+
 if __name__ == "__main__":
     app.run(debug=True)
+
+
 
 
 #Database host address:Celinaetienot.mysql.pythonanywhere-services.com

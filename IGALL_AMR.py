@@ -1,48 +1,36 @@
-
 from flask import Flask, request, jsonify
-from flask import request
-
 from flask_cors import CORS
-
-
 import mysql.connector
-
 from werkzeug.utils import secure_filename
-
 import os
 import time
 
 app = Flask(__name__)
 CORS(app, resources={
-    r"/documentos/*": {"origins": "http://127.0.0.1:5500"},
-    r"/lineas/*": {"origins": "http://127.0.0.1:5500"}
+    r"/documentos/*": {"origins": "https://celinaetienot.pythonanywhere.com/"},
+    r"/lineas/*": {"origins": "https://celinaetienot.pythonanywhere.com/"}
 }, methods=["GET", "POST", "PUT", "DELETE"])
 
-#-------------------------------------------------
-#    definicion clase biblioteca
-#-------------------------------------------------
 class Biblioteca:
     def __init__(self, host, user, password, database):
         self.conn = mysql.connector.connect(
             host=host,
             user=user,
             password=password,
+            database=database
         )
-        self.cursor = self.conn.cursor()
         self.cursor = self.conn.cursor(dictionary=True)
-        
-        # Intentamos seleccionar la base de datos
+
         try:
             self.cursor.execute(f"USE {database}")
         except mysql.connector.Error as err:
-            # Si la base de datos no existe, la creamos
             if err.errno == mysql.connector.errorcode.ER_BAD_DB_ERROR:
                 self.cursor.execute(f"CREATE DATABASE {database}")
                 self.conn.database = database
             else:
                 raise err
-        # Una vez que la base de datos está establecida, creamos la tabla si no existe
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS `Biblioteca` (
+
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS `biblioteca` (
                             `No` varchar(255) NOT NULL,
                             `Title` text DEFAULT NULL,
                             `Area` text DEFAULT NULL,
@@ -51,12 +39,25 @@ class Biblioteca:
                             `Igall_owner` text DEFAULT NULL
                             )''')
         self.conn.commit()
- # Cerrar el cursor inicial y abrir uno nuevo con el parámetro dictionary=True
-        self.cursor.close()
-        self.cursor = self.conn.cursor(dictionary=True)
+
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS `AMRtable` (
+                                `id` VARCHAR(255) PRIMARY KEY,
+                                `table_no` INT,
+                                `igall_no` INT,
+                                `system_name` VARCHAR(255),
+                                `structure_component` VARCHAR(255),
+                                `critical_location_part` VARCHAR(255),
+                                `material` VARCHAR(255),
+                                `environment` VARCHAR(255),
+                                `ageing_effect` VARCHAR(255),
+                                `degradation_mechanism` VARCHAR(255),
+                                `Document` VARCHAR(255),
+                                `design` VARCHAR(255)
+                            )''')
+        self.conn.commit()
 
     def listar_documentos(self):
-        self.cursor.execute("SELECT * FROM Biblioteca")
+        self.cursor.execute("SELECT * FROM biblioteca")
         documentos = self.cursor.fetchall()
         return documentos
 
@@ -66,29 +67,28 @@ class Biblioteca:
         if documento_existe:
             return False
         else:
-            sql = "INSERT INTO Biblioteca (No, Title, Area, url, `Last_valid_version`, Igall_owner) VALUES (%s, %s, %s, %s, %s, %s)" 
+            sql = "INSERT INTO biblioteca (No, Title, Area, url, `Last_valid_version`, Igall_owner) VALUES (%s, %s, %s, %s, %s, %s)"
             values = (No, Title, Area, url, Last_valid_version, Igall_owner)
-            self.cursor.execute(sql,values)
+            self.cursor.execute(sql, values)
             self.conn.commit()
             return True
-    
+
     def consultar_documento(self, No):
-        self.cursor.execute("SELECT * FROM Biblioteca WHERE No =  %s", (No,))
+        self.cursor.execute("SELECT * FROM biblioteca WHERE No =  %s", (No,))
         documento = self.cursor.fetchone()
         return documento
-    
+
     def modificar_documento(self, No, Title, Area, url, Last_valid_version, Igall_owner):
-        sql = "UPDATE Biblioteca SET Title = %s, Area = %s, url = %s, Last_valid_version = %s, Igall_owner = %s WHERE No = %s"
+        sql = "UPDATE biblioteca SET Title = %s, Area = %s, url = %s, Last_valid_version = %s, Igall_owner = %s WHERE No = %s"
         values = (Title, Area, url, Last_valid_version, Igall_owner, No)
 
         self.cursor.execute(sql, values)
         self.conn.commit()
-        
+
         return self.cursor.rowcount > 0
 
-    
     def mostrar_documentos(self, No):
-        self.cursor.execute("SELECT * FROM Biblioteca WHERE No = %s", (No,))
+        self.cursor.execute("SELECT * FROM biblioteca WHERE No = %s", (No,))
         documentos = self.cursor.fetchall()
         print("-" * 50)
         for documento in documentos:
@@ -100,102 +100,40 @@ class Biblioteca:
             print(f"Propietario..............: {documento['Igall_owner']}")
             print("-" * 50)
 
-    
-    
     def eliminar_documento(self, No):
-        sql = "DELETE FROM Biblioteca WHERE No = %s"
+        sql = "DELETE FROM biblioteca WHERE No = %s"
         self.cursor.execute(sql, (No,))
         self.conn.commit()
-        # Consumir resultados para evitar el "Unread result found"
         self.cursor.fetchall()
         return self.cursor.rowcount > 0
-#-------------------------------------------------
-#    definicion clase AMR
-#-------------------------------------------------
-class AMR:
-    def __init__(self, host, user, password, database):
-        self.conn = mysql.connector.connect(
-            host=host,
-            user=user,
-            password=password,
-        )
-        self.cursor = self.conn.cursor()
-        self.cursor = self.conn.cursor(dictionary=True)
-        
-        # Intentamos seleccionar la base de datos
-        try:
-            self.cursor.execute(f"USE {database}")
-        except mysql.connector.Error as err:
-            # Si la base de datos no existe, la creamos
-            if err.errno == mysql.connector.errorcode.ER_BAD_DB_ERROR:
-                self.cursor.execute(f"CREATE DATABASE {database}")
-                self.conn.database = database
-            else:
-                raise err
-        # Una vez que la base de datos está establecida, creamos la tabla si no existe
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS AMRtable (
-                                id VARCHAR(255) PRIMARY KEY,
-                                table_no INT,
-                                igall_no INT,
-                                system VARCHAR(255),
-                                structure_component VARCHAR(255),
-                                critical_location_part VARCHAR(255),
-                                material VARCHAR(255),
-                                environment VARCHAR(255),
-                                ageing_effect VARCHAR(255),
-                                degradation_mechanism VARCHAR(255),
-                                Document VARCHAR(255),
-                                design VARCHAR(255),
-                                CONSTRAINT unique_id UNIQUE (id)
-                                );
-                                -- Para asegurarte de que los valores sean únicos
-                                CREATE TRIGGER unique_id_trigger
-                                BEFORE INSERT ON TuTabla
-                                FOR EACH ROW
-                                SET NEW.id = CONCAT(NEW.table_no, '_', NEW.igall_no);''', multi=True
-                            )
-        self.conn.commit()
-        # Cerrar el cursor inicial y abrir uno nuevo con el parámetro dictionary=True
-        self.cursor.close()
-        self.cursor = self.conn.cursor(dictionary=True)
-        
-    def agregar_linea(self, table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design):
-        # Verificar si la línea ya existe en la tabla
+
+    def agregar_linea(self, table_no, igall_no, system_name, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design):
         self.cursor.execute("SELECT * FROM AMRtable WHERE table_no = %s AND igall_no = %s", (table_no, igall_no))
         linea_existe = self.cursor.fetchone()
 
         if linea_existe:
-            return False  # La línea ya existe, no se puede agregar de nuevo
+            return False
         else:
-            # Insertar la nueva línea en la tabla
-            sql = "INSERT INTO AMRtable (id, table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
-            values = ("%s_%s" % (table_no, igall_no), table_no, igall_no, system, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design)
+            sql = "INSERT INTO AMRtable (id, table_no, igall_no, system_name, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            values = ("%s_%s" % (table_no, igall_no), table_no, igall_no, system_name, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design)
             self.cursor.execute(sql, values)
             self.conn.commit()
-            return True  # La línea se agregó correctamente
-
+            return True
 
     def eliminar_lineas(self, table_no, igall_no):
-        # Verificar si la línea existe en la tabla
         self.cursor.execute("SELECT * FROM AMRtable WHERE table_no = %s AND igall_no = %s", (table_no, igall_no))
         linea_existe = self.cursor.fetchone()
 
         if linea_existe:
-             # Construir la consulta SQL para eliminar las líneas por table_no e igall_no
             sql = "DELETE FROM AMRtable WHERE table_no = %s AND igall_no = %s"
-            
-            # Ejecutar la consulta
             self.cursor.execute(sql, (table_no, igall_no))
             self.conn.commit()
-
-            # Verificar si se eliminaron filas
             return self.cursor.rowcount > 0
         else:
-           return False  # La línea no existe, no se puede eliminar
+            return False
 
-    def mostrar_lineas(self, table_no=None, igall_no=None, system=None, structure_component=None, critical_location_part=None, material=None, environment=None, ageing_effect=None, degradation_mechanism=None, document=None, design=None):
-        # Construir la consulta SQL dinámicamente
-        sql = "SELECT AMRtable.*, Biblioteca.url FROM AMRtable LEFT JOIN Biblioteca ON AMRtable.document = Biblioteca.No WHERE 1=1"  # Start with 1=1 to simplify the query building
+    def mostrar_lineas(self, table_no=None, igall_no=None, system_name=None, structure_component=None, critical_location_part=None, material=None, environment=None, ageing_effect=None, degradation_mechanism=None, document=None, design=None):
+        sql = "SELECT AMRtable.*, biblioteca.url FROM AMRtable LEFT JOIN biblioteca ON AMRtable.document = biblioteca.No WHERE 1=1"
         conditions = []
         values = []
 
@@ -205,9 +143,9 @@ class AMR:
         if igall_no is not None:
             conditions.append(" AND igall_no = %s")
             values.append(igall_no)
-        if system is not None:
-            conditions.append(" AND system = %s")
-            values.append(system)
+        if system_name is not None:
+            conditions.append(" AND system_name = %s")
+            values.append(system_name)
         if structure_component is not None:
             conditions.append(" AND structure_component = %s")
             values.append(structure_component)
@@ -236,23 +174,13 @@ class AMR:
         if conditions:
             sql += " ".join(conditions)
 
-        # Ejecutar la consulta
         self.cursor.execute(sql, values)
         lineas = self.cursor.fetchall()
-        print (sql)
         return lineas
 
-   
+BIBLIOTECA = Biblioteca(host='Celinaetienot.mysql.pythonanywhere-services.com', user='Celinaetienot', password='JaPaCe2023', database='Celinaetienot$IGALL')
 
-#-------------------------------------------------
-#    MODULO BIBLIOTECA
-#-------------------------------------------------
-    
-BIBLIOTECA = Biblioteca(host='localhost', user='root', password='', database='mechanical')
-
-
-# Carpeta para almacenar los documentos
-ruta_destino= 'static\documentos'
+ruta_destino = '/home/Celinaetienot/mysite/static/documents/'
 
 @app.route("/documentos", methods=["GET"])
 def listar_documentos():
@@ -267,19 +195,17 @@ def mostrar_documento(No):
         return jsonify(documento)
     else:
         return "Documento no encontrado", 404
-    
+
 @app.route("/documentos", methods=["POST"])
 def agregar_documento():
-    # Recojo los datos del form
     No = request.form['No']
     Title = request.form['Title']
     Area = request.form['Area']
     archivo = request.files['Archivo']
     Last_valid_version = request.form['Last_valid_version']
     Igall_owner = request.form['Igall_owner']
-    
-    nombre_url = secure_filename(archivo.filename)
 
+    nombre_url = secure_filename(archivo.filename)
     nombre_base, extension = os.path.splitext(nombre_url)
     nombre_url = f"{nombre_base}_{int(time.time())}{extension}"
     archivo.save(os.path.join(ruta_destino, nombre_url))
@@ -291,7 +217,6 @@ def agregar_documento():
 
 @app.route("/documentos/<No>", methods=["PUT"])
 def modificar_documento(No):
-    # Recojo los datos del form
     No = request.form['No']
     Title = request.form['Title']
     Area = request.form['Area']
@@ -314,12 +239,10 @@ def eliminar_documento(No):
     documento = BIBLIOTECA.consultar_documento(No)
     if documento:
         try:
-            # Eliminar el documento si existe
             url = os.path.join(ruta_destino, documento['url'])
             if os.path.exists(url):
                 os.remove(url)
 
-            # Luego, elimina el documento de la biblioteca
             if BIBLIOTECA.eliminar_documento(No):
                 print("Documento eliminado correctamente")
                 return jsonify({"mensaje": "Documento eliminado correctamente"}), 200
@@ -332,19 +255,11 @@ def eliminar_documento(No):
     else:
         return jsonify({"error": True, "message": "Documento no encontrado"}), 404
 
-    
-#-------------------------------------------------
-#    MODULO AMRtable
-#-------------------------------------------------
-
-AMRTABLE = AMR(host='localhost', user='root', password='', database='mechanical')
-
 @app.route("/lineas", methods=["GET"])
 def mostrar_lineas():
-    # Obtener parámetros de búsqueda desde la solicitud
     table_no = request.args.get('table_no')
     igall_no = request.args.get('igall_no')
-    system = request.args.get('system')
+    system_name = request.args.get('system_name')
     structure_component = request.args.get('structure_component')
     critical_location_part = request.args.get('critical_location_part')
     material = request.args.get('material')
@@ -354,8 +269,8 @@ def mostrar_lineas():
     document = request.args.get('document')
     design = request.args.get('design')
 
-    lineas = AMRTABLE.mostrar_lineas(
-        table_no, igall_no, system, structure_component, critical_location_part,
+    lineas = BIBLIOTECA.mostrar_lineas(
+        table_no, igall_no, system_name, structure_component, critical_location_part,
         material, environment, ageing_effect, degradation_mechanism, document, design
     )
 
@@ -364,12 +279,13 @@ def mostrar_lineas():
     else:
         return "No se encontraron registros con esos parámetros", 404
 
+if __name__ == "__main__":
+    app.run(debug=True)
 
+
+    
 #Database host address:Celinaetienot.mysql.pythonanywhere-services.com
 #User:Celinaetienot
 #password: JaPaCe2023
 #Database:Celinaetienot$IGALL
 #ruta_documentos:'/home/Celinaetienot/mysite/static/documents/'
-
-if __name__ == "__main__":
-    app.run(debug=True)
