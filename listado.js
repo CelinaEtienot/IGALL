@@ -13,8 +13,9 @@ fetch(URL + 'documentos')
     })
     .then(function (data) {
         let tableBody = document.getElementById('tableBody');
-
+        
         // Iterate over the documents and create rows
+
         for (let documento of data) {
             // Create a table row
             let row = document.createElement('tr');

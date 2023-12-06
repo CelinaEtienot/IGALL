@@ -4,20 +4,40 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Eliminar Documento</title>
+    <title>Delete Document</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 
 <body>
-    <div class="principal__container">
-        
-        <h1>Eliminar Documento</h1>
-        <label for="documentNo">Número de Documento:</label>
-        <input type="text" id="documentNo" name="documentNo" required>
-        <button onclick="eliminarDocumento()">Eliminar Documento</button>
-        <button><a href="index.html">Menu principal</a></button>
+    
+        <h1>Delete Document</h1>
+        <table>
+            <thead>
+                <tr>
+                    <th>No</th>
+                    <th>Title</th>
+                    <th>Area</th>
+                    <th>Last Valid Version</th>
+                    <th>Igall owner</th>
+                    <th>Delete</th>
+                </tr>
+            </thead>
+            <tbody id="app">
+                <tr v-for="documento in documentos" :key="documento.No">
+                    <td>{{ documento.No }}</td>
+                    <td>{{ documento.Title }}</td>
+                    <td>{{ documento.Area }}</td>
+                    <td>{{ documento.Last_valid_version }}</td>
+                    <td>{{ documento.Igall_owner }}</td>
+                    <td><button  @click="eliminarDocumento(documento.No)">Delete</button></td>
+                                    </tr>
+            </tbody>
+        </table>
+        <button><a href="index.html">Index</a></button>
         <div id="result"></div>
-    </div>
+   
+
+    <script src="https://unpkg.com/vue@3"></script>
     <script src="eliminar.js"></script>
 </body>
 
