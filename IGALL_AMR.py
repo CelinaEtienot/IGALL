@@ -7,9 +7,10 @@ import time
 
 app = Flask(__name__)
 CORS(app, resources={
-    r"/documentos/*": {"origins": "https://celinaetienot.pythonanywhere.com/"},
-    r"/lineas/*": {"origins": "https://celinaetienot.pythonanywhere.com/"}
+    r"/documentos/*": {"origins": ["https://celinaetienot.pythonanywhere.com/", "http://127.0.0.1:5500"]},
+    r"/lineas/*": {"origins": ["https://celinaetienot.pythonanywhere.com/", "http://127.0.0.1:5500"]}
 }, methods=["GET", "POST", "PUT", "DELETE"])
+
 
 class Biblioteca:
     def __init__(self, host, user, password, database):
@@ -40,7 +41,7 @@ class Biblioteca:
                             )''')
         self.conn.commit()
 
-        self.cursor.execute('''CREATE TABLE IF NOT EXISTS `AMRtable` (
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS `amrtable` (
                                 `id` VARCHAR(255) PRIMARY KEY,
                                 `table_no` INT,
                                 `igall_no` INT,
@@ -76,7 +77,9 @@ class Biblioteca:
     def consultar_documento(self, No):
         self.cursor.execute("SELECT * FROM biblioteca WHERE No =  %s", (No,))
         documento = self.cursor.fetchone()
+        self.conn.commit()
         return documento
+
 
     def modificar_documento(self, No, Title, Area, url, Last_valid_version, Igall_owner):
         sql = "UPDATE biblioteca SET Title = %s, Area = %s, url = %s, Last_valid_version = %s, Igall_owner = %s WHERE No = %s"
@@ -101,31 +104,29 @@ class Biblioteca:
             print("-" * 50)
 
     def eliminar_documento(self, No):
-        sql = "DELETE FROM biblioteca WHERE No = %s"
-        self.cursor.execute(sql, (No,))
+        self.cursor.execute("DELETE FROM biblioteca WHERE No = %s", (No,))
         self.conn.commit()
-        self.cursor.fetchall()
         return self.cursor.rowcount > 0
 
     def agregar_linea(self, table_no, igall_no, system_name, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design):
-        self.cursor.execute("SELECT * FROM AMRtable WHERE table_no = %s AND igall_no = %s", (table_no, igall_no))
+        self.cursor.execute("SELECT * FROM amrtable WHERE table_no = %s AND igall_no = %s", (table_no, igall_no))
         linea_existe = self.cursor.fetchone()
 
         if linea_existe:
             return False
         else:
-            sql = "INSERT INTO AMRtable (id, table_no, igall_no, system_name, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
+            sql = "INSERT INTO amrtable (id, table_no, igall_no, system_name, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design) VALUES (%s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s, %s)"
             values = ("%s_%s" % (table_no, igall_no), table_no, igall_no, system_name, structure_component, critical_location_part, material, environment, ageing_effect, degradation_mechanism, document, design)
             self.cursor.execute(sql, values)
             self.conn.commit()
             return True
 
     def eliminar_lineas(self, table_no, igall_no):
-        self.cursor.execute("SELECT * FROM AMRtable WHERE table_no = %s AND igall_no = %s", (table_no, igall_no))
+        self.cursor.execute("SELECT * FROM amrtable WHERE table_no = %s AND igall_no = %s", (table_no, igall_no))
         linea_existe = self.cursor.fetchone()
 
         if linea_existe:
-            sql = "DELETE FROM AMRtable WHERE table_no = %s AND igall_no = %s"
+            sql = "DELETE FROM amrtable WHERE table_no = %s AND igall_no = %s"
             self.cursor.execute(sql, (table_no, igall_no))
             self.conn.commit()
             return self.cursor.rowcount > 0
@@ -133,7 +134,7 @@ class Biblioteca:
             return False
 
     def mostrar_lineas(self, table_no=None, igall_no=None, system_name=None, structure_component=None, critical_location_part=None, material=None, environment=None, ageing_effect=None, degradation_mechanism=None, document=None, design=None):
-        sql = "SELECT AMRtable.*, biblioteca.url FROM AMRtable LEFT JOIN biblioteca ON AMRtable.document = biblioteca.No WHERE 1=1"
+        sql = "SELECT amrtable.*, biblioteca.url FROM amrtable LEFT JOIN biblioteca ON amrtable.document = biblioteca.No WHERE 1=1"
         conditions = []
         values = []
 
@@ -238,22 +239,20 @@ def modificar_documento(No):
 def eliminar_documento(No):
     documento = BIBLIOTECA.consultar_documento(No)
     if documento:
-        try:
-            url = os.path.join(ruta_destino, documento['url'])
-            if os.path.exists(url):
-                os.remove(url)
 
-            if BIBLIOTECA.eliminar_documento(No):
-                print("Documento eliminado correctamente")
-                return jsonify({"mensaje": "Documento eliminado correctamente"}), 200
-            else:
-                print("Error interno al eliminar el documento de la biblioteca")
-                return jsonify({"error": True, "message": "Error interno al eliminar el documento"}), 500
-        except Exception as e:
-            print("Error al eliminar el documento:", str(e))
-            return jsonify({"error": True, "message": str(e)}), 500
+        url = os.path.join(ruta_destino, documento['url'])
+        if os.path.exists(url):
+            os.remove(url)
+
+        if BIBLIOTECA.eliminar_documento(No):
+            print("Documento eliminado correctamente")
+            return jsonify({"mensaje": "Documento eliminado correctamente"}), 200
+        else:
+            print("Error interno al eliminar el documento de la biblioteca")
+            return jsonify({"mensaje": "Error al eliminar el documento"}), 500
+
     else:
-        return jsonify({"error": True, "message": "Documento no encontrado"}), 404
+        return jsonify({"mensaje": "Documento no encontrado"}), 404
 
 @app.route("/lineas", methods=["GET"])
 def mostrar_lineas():
@@ -281,7 +280,6 @@ def mostrar_lineas():
 
 if __name__ == "__main__":
     app.run(debug=True)
-
 
     
 #Database host address:Celinaetienot.mysql.pythonanywhere-services.com
