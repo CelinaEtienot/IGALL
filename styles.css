@@ -151,6 +151,10 @@ a {
     text-decoration: none;
 }
 
+td a{
+    color: white;
+}
+
 /*revisar*/
 #app{
     margin: 2em auto 0;
